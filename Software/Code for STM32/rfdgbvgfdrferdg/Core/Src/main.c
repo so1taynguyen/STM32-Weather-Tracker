@@ -1,0 +1,2360 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "cmsis_os.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "stdio.h"
+#include "string.h"
+#include "stdlib.h"
+
+#include "MAX30102.h"
+#include "st7789.h"
+#include "ADXL.h"
+#include "SHT31.h"
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+typedef enum
+{
+    MENU,
+    DATETIME,
+    WEATHER,
+    HBSPO2,
+    SETTING,
+    GAME
+} glb_state_t;
+typedef enum
+{
+    INIT,
+    WEATHER_API
+} mode_t;
+static const char *mode_string[] = {
+    "INIT",
+    "WEATHER_API",
+};
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+#define MENU_TIMEOUT 120000
+
+#define lcd_thermometer_size 838
+#define lcd_thermometer_small_size 246
+#define lcd_humidity_size 476
+#define lcd_humidity_small_size 176
+#define lcd_schedule_size 4638
+#define lcd_hbspo2_size 2822
+#define lcd_weather_size 5928
+#define lcd_settings_size 5758
+#define lcd_game_size 1840
+// #define lcd_microsd_size			  1968
+#define lcd_01d_size 1268
+#define lcd_01n_size 3042
+#define lcd_02d_size 716
+#define lcd_02n_size 1308
+#define lcd_03dn_size 1320
+#define lcd_04dn_size 914
+#define lcd_09dn_size 1278
+#define lcd_10d_size 2234
+#define lcd_10n_size 1762
+#define lcd_11dn_size 1160
+#define lcd_wind_size 118
+#define lcd_50dn_size 1624
+#define Font_Morgan_32x72_size 6840
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c4;
+
+RTC_HandleTypeDef hrtc;
+
+SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi2;
+DMA_HandleTypeDef hdma_spi2_tx;
+
+UART_HandleTypeDef huart2;
+
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for ADXL_Task */
+osThreadId_t ADXL_TaskHandle;
+const osThreadAttr_t ADXL_Task_attributes = {
+  .name = "ADXL_Task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for FSM_Task */
+osThreadId_t FSM_TaskHandle;
+const osThreadAttr_t FSM_Task_attributes = {
+  .name = "FSM_Task",
+  .stack_size = 2048 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for SHT_Task */
+osThreadId_t SHT_TaskHandle;
+const osThreadAttr_t SHT_Task_attributes = {
+  .name = "SHT_Task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* USER CODE BEGIN PV */
+ADXL_InitTypeDef adxl;
+int16_t adxl_acc[3];
+int16_t adxl_prevX, adxl_prevY, adxl_prevZ;
+int16_t adxl_X, adxl_Y, adxl_Z;
+
+glb_state_t glb_state;
+uint8_t glb_menu, glb_rtc_icon_flag, glb_menu_icon_flag;
+uint32_t glb_start_menu_time;
+
+int8_t sht_temp, sht_humidity;
+int8_t sht_prev_temp, sht_prev_humidity;
+char sht_temp_buff[4];
+char sht_hum_buff[4];
+
+int32_t hbspo2_heartRate, hbspo2_spo2;
+char hbspo2_heartRate_buff[22], hbspo2_spo2_buff[20];
+uint32_t hbspo2_IR[MAX30102_BUFFER_LENGTH], hbspo2_R[MAX30102_BUFFER_LENGTH];
+uint8_t hbspo2_enable, hbspo2_flag;
+
+char Tx_buffer[60];
+
+uint8_t esp32_rx_buffer[60];
+uint8_t esp32_rx_data;
+uint8_t esp32_rx_index;
+char esp32_pkt[60];
+uint8_t esp32_pass_fail = 0;
+uint64_t esp32_data_result = 0;
+uint8_t esp32_error_count = 0;
+uint32_t esp32_start_time;
+uint32_t lcd_local_index;
+uint8_t lcd_thermometer_flag, lcd_thermometer_small_flag, lcd_humidity_flag, lcd_humidity_small_flag, lcd_schedule_flag, lcd_settings_flag, lcd_hbspo2_flag, lcd_weather_flag, lcd_game_flag;
+uint8_t lcd_01d_flag, lcd_01n_flag, lcd_02d_flag, lcd_02n_flag, lcd_03dn_flag, lcd_04dn_flag, lcd_09dn_flag, lcd_10d_flag, lcd_10n_flag, lcd_11dn_flag, lcd_wind_flag, lcd_50dn_flag;
+uint8_t Font_Morgan_32x72_flag;
+uint16_t lcd_thermometer[lcd_thermometer_size], lcd_thermometer_small[lcd_thermometer_small_size], lcd_humidity[lcd_humidity_size], lcd_humidity_small[lcd_humidity_small_size], lcd_schedule[lcd_schedule_size], lcd_hbspo2[lcd_hbspo2_size], lcd_weather[lcd_weather_size], lcd_settings[lcd_settings_size], lcd_game[lcd_game_size];
+uint16_t lcd_01d[lcd_01d_size], lcd_01n[lcd_01n_size], lcd_02d[lcd_02d_size], lcd_02n[lcd_02n_size], lcd_03dn[lcd_03dn_size], lcd_04dn[lcd_04dn_size], lcd_09dn[lcd_09dn_size], lcd_10d[lcd_10d_size], lcd_10n[lcd_10n_size], lcd_11dn[lcd_11dn_size], lcd_wind[lcd_wind_size], lcd_50dn[lcd_50dn_size];
+uint32_t Font_Morgan_32x72[6840];
+FontDefMedium FontMorgan_32x72;
+
+uint8_t weather_current_flag, weather_forecast_flag;
+char weather_current[6][60];
+char weather_forecast[35][60];
+uint8_t weather_menu_icon_flag, weather_menu, weather_rtc_icon_flag, weather_skip;
+int8_t weather_day, weather_day_icon_flag;
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MPU_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_RTC_Init(void);
+static void MX_SPI1_Init(void);
+static void MX_SPI2_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_I2C4_Init(void);
+static void MX_USART2_UART_Init(void);
+void StartDefaultTask(void *argument);
+void Start_ADXL_Task(void *argument);
+void Start_FSM_Task(void *argument);
+void Start_SHT_Task(void *argument);
+
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+#include "../Lib/RTC/RTC.h"
+
+void ESP32_check_data(uint16_t *data, uint32_t index)
+{
+    if ((index % 2) != 0)
+    {
+        esp32_data_result += (data[index - 1] + data[index]) / 64;
+    }
+}
+
+void ESP32_check_data_large(uint32_t *data, uint32_t index)
+{
+    if ((index % 2) != 0)
+    {
+        esp32_data_result += (data[index - 1] + data[index]) / 64;
+    }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    UNUSED(huart);
+
+    if (huart->Instance == USART2)
+    {
+        if (esp32_rx_data != 13 && esp32_rx_data != 10)
+        {
+            esp32_rx_buffer[esp32_rx_index++] = esp32_rx_data;
+        }
+        else if (esp32_rx_data == 13)
+        {
+            esp32_rx_index = 0;
+            if (lcd_thermometer_flag == 1)
+            {
+                if (lcd_local_index != lcd_thermometer_size)
+                {
+                    lcd_thermometer[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_thermometer, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_thermometer_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_thermometer_small_flag == 1)
+            {
+                if (lcd_local_index != lcd_thermometer_small_size)
+                {
+                    lcd_thermometer_small[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_thermometer_small, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_thermometer_small_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_humidity_flag == 1)
+            {
+                if (lcd_local_index != lcd_humidity_size)
+                {
+                    lcd_humidity[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_humidity, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_humidity_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_humidity_small_flag == 1)
+            {
+                if (lcd_local_index != lcd_humidity_small_size)
+                {
+                    lcd_humidity_small[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_humidity_small, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_humidity_small_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_schedule_flag == 1)
+            {
+                if (lcd_local_index != lcd_schedule_size)
+                {
+                    lcd_schedule[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_schedule, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_schedule_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_hbspo2_flag == 1)
+            {
+                if (lcd_local_index != lcd_hbspo2_size)
+                {
+                    lcd_hbspo2[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_hbspo2, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_hbspo2_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_weather_flag == 1)
+            {
+                if (lcd_local_index != lcd_weather_size)
+                {
+                    lcd_weather[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_weather, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_weather_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_settings_flag == 1)
+            {
+                if (lcd_local_index != lcd_settings_size)
+                {
+                    lcd_settings[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_settings, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_settings_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_game_flag == 1)
+            {
+                if (lcd_local_index != lcd_game_size)
+                {
+                    lcd_game[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_game, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_game_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_01d_flag == 1)
+            {
+                if (lcd_local_index != lcd_01d_size)
+                {
+                    lcd_01d[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_01d, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_01d_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_01n_flag == 1)
+            {
+                if (lcd_local_index != lcd_01n_size)
+                {
+                    lcd_01n[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_01n, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_01n_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_02d_flag == 1)
+            {
+                if (lcd_local_index != lcd_02d_size)
+                {
+                    lcd_02d[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_02d, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_02d_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_02n_flag == 1)
+            {
+                if (lcd_local_index != lcd_02n_size)
+                {
+                    lcd_02n[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_02n, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_02n_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_03dn_flag == 1)
+            {
+                if (lcd_local_index != lcd_03dn_size)
+                {
+                    lcd_03dn[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_03dn, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_03dn_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_04dn_flag == 1)
+            {
+                if (lcd_local_index != lcd_04dn_size)
+                {
+                    lcd_04dn[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_04dn, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_04dn_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_09dn_flag == 1)
+            {
+                if (lcd_local_index != lcd_09dn_size)
+                {
+                    lcd_09dn[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_09dn, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_09dn_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_10d_flag == 1)
+            {
+                if (lcd_local_index != lcd_10d_size)
+                {
+                    lcd_10d[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_10d, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_10d_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_10n_flag == 1)
+            {
+                if (lcd_local_index != lcd_10n_size)
+                {
+                    lcd_10n[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_10n, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_10n_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_11dn_flag == 1)
+            {
+                if (lcd_local_index != lcd_11dn_size)
+                {
+                    lcd_11dn[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_11dn, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_11dn_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_wind_flag == 1)
+            {
+                if (lcd_local_index != lcd_wind_size)
+                {
+                    lcd_wind[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_wind, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_wind_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (lcd_50dn_flag == 1)
+            {
+                if (lcd_local_index != lcd_50dn_size)
+                {
+                    lcd_50dn[lcd_local_index++] = atoi(esp32_rx_buffer);
+                    ESP32_check_data(lcd_50dn, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    lcd_50dn_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (Font_Morgan_32x72_flag == 1)
+            {
+                if (lcd_local_index != Font_Morgan_32x72_size)
+                {
+                    Font_Morgan_32x72[lcd_local_index++] = (uint32_t)atoll(esp32_rx_buffer);
+                    ESP32_check_data_large(Font_Morgan_32x72, lcd_local_index - 1);
+                }
+                else
+                {
+                    if (esp32_data_result == atoll(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    Font_Morgan_32x72_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else if (weather_current_flag == 1)
+            {
+                if (lcd_local_index != 6)
+                {
+                    strcpy(weather_current[lcd_local_index], esp32_rx_buffer);
+                    lcd_local_index++;
+                }
+                else
+                {
+                    // uint16_t arr_for_check[4];
+                    uint16_t *arr_for_check = (uint16_t *)malloc(4 * sizeof(uint16_t));
+                    for (uint8_t i = 0; i < 4; i++)
+                    {
+                        arr_for_check[i] = atoi(weather_current[i + 2]);
+                        ESP32_check_data(arr_for_check, i);
+                    }
+                    if (esp32_data_result == atoi(esp32_rx_buffer))
+                    {
+                        esp32_pass_fail = 1;
+                    }
+                    else
+                    {
+                        esp32_pass_fail = 0;
+                    }
+                    weather_current_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                    free(arr_for_check);
+                }
+            }
+            else if (weather_forecast_flag == 1)
+            {
+                if (lcd_local_index != 35)
+                {
+                    strcpy(weather_forecast[lcd_local_index], esp32_rx_buffer);
+                    lcd_local_index++;
+                }
+                else
+                {
+                    esp32_pass_fail = 1;
+                    weather_forecast_flag = 0;
+                    lcd_local_index = 0;
+                    esp32_data_result = 0;
+                }
+            }
+            else
+            {
+                strcpy(esp32_pkt, esp32_rx_buffer);
+            }
+
+            memset(esp32_rx_buffer, '\0', sizeof(esp32_rx_buffer));
+        }
+        HAL_UART_Receive_IT(&huart2, &esp32_rx_data, 1);
+    }
+}
+
+void handshaking(mode_t mode, uint8_t city)
+{
+    // char *Tx_buffer = (char *)malloc(61 * sizeof(Tx_buffer));
+    memset(Tx_buffer, '\0', sizeof(Tx_buffer));
+    sprintf(Tx_buffer, "STM32: Get %s", mode_string[mode]);
+
+    if (mode == WEATHER_API)
+    {
+        char city_id[3];
+        sprintf(city_id, " %d", city);
+        strcat(Tx_buffer, city_id);
+    }
+
+    HAL_UART_Transmit(&huart2, Tx_buffer, sizeof(Tx_buffer), 1000);
+    HAL_UART_Receive_IT(&huart2, &esp32_rx_data, 1);
+    osDelay(30);
+    esp32_start_time = HAL_GetTick();
+    while (strcmp(esp32_pkt, "ESP32: ACK") != 0)
+    {
+        if (esp32_error_count == 10)
+        {
+            HAL_GPIO_WritePin(GPIOE, LEDR_Pin, GPIO_PIN_SET);
+            osDelay(10000);
+            HAL_GPIO_WritePin(GPIOE, LEDR_Pin, GPIO_PIN_RESET);
+            esp32_error_count = 0;
+            return;
+        }
+        if ((HAL_GetTick() - esp32_start_time) > 6000)
+        {
+            HAL_UART_Transmit(&huart2, Tx_buffer, sizeof(Tx_buffer), 100);
+            esp32_start_time = HAL_GetTick();
+            esp32_error_count++;
+        }
+    }
+    // free(Tx_buffer);
+    esp32_error_count = 0;
+    HAL_UART_Transmit(&huart2, "STM32: OK", 9, 100);
+    memset(esp32_pkt, '\0', sizeof(esp32_pkt));
+    // strcpy(esp32_pkt, "\0");
+
+    while (strcmp(esp32_pkt, "ESP32: END") != 0)
+    {
+        HAL_UART_Receive_IT(&huart2, &esp32_rx_data, 1);
+        osDelay(10);
+
+        if (strncmp(esp32_pkt, "ESP32: SEND ", 12) == 0)
+        {
+            char *selected_array = strstr(esp32_pkt, "ESP32: SEND ") + strlen("ESP32: SEND ");
+
+            if (strcmp(selected_array, "lcd_thermometer") == 0)
+            {
+                lcd_thermometer_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_thermometer_small") == 0)
+            {
+                lcd_thermometer_small_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_humidity") == 0)
+            {
+                lcd_humidity_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_humidity_small") == 0)
+            {
+                lcd_humidity_small_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_schedule") == 0)
+            {
+                lcd_schedule_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_hbspo2") == 0)
+            {
+                lcd_hbspo2_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_weather") == 0)
+            {
+                lcd_weather_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_settings") == 0)
+            {
+                lcd_settings_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_game") == 0)
+            {
+                lcd_game_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_01d") == 0)
+            {
+                lcd_01d_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_01n") == 0)
+            {
+                lcd_01n_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_02d") == 0)
+            {
+                lcd_02d_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_02n") == 0)
+            {
+                lcd_02n_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_03dn") == 0)
+            {
+                lcd_03dn_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_04dn") == 0)
+            {
+                lcd_04dn_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_09dn") == 0)
+            {
+                lcd_09dn_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_10d") == 0)
+            {
+                lcd_10d_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_10n") == 0)
+            {
+                lcd_10n_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_11dn") == 0)
+            {
+                lcd_11dn_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_wind") == 0)
+            {
+                lcd_wind_flag = 1;
+            }
+            else if (strcmp(selected_array, "lcd_50d") == 0)
+            {
+                lcd_50dn_flag = 1;
+            }
+            else if (strcmp(selected_array, "Font_Morgan_32x72") == 0)
+            {
+                Font_Morgan_32x72_flag = 1;
+            }
+            else if (strcmp(selected_array, "current") == 0)
+            {
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    // strcpy(weather_current[i], 0);
+                    memset(weather_current[i], '\0', sizeof(weather_current[i]));
+                }
+                weather_current_flag = 1;
+            }
+            else if (strcmp(selected_array, "forecast") == 0)
+            {
+                for (uint8_t i = 0; i < 35; i++)
+                {
+                    // strcpy(weather_forecast[i], 0);
+                    memset(weather_forecast[i], '\0', sizeof(weather_forecast[i]));
+                }
+                weather_forecast_flag = 1;
+            }
+            HAL_UART_Transmit(&huart2, "STM32: OK", 9, 100);
+            memset(esp32_pkt, '\0', sizeof(esp32_pkt));
+            HAL_UART_Receive_IT(&huart2, &esp32_rx_data, 1);
+            if (mode == INIT) {
+                HAL_Delay(5000);
+            }
+            else {
+                HAL_Delay(10000);
+            }
+            memset(esp32_pkt, '\0', sizeof(esp32_pkt));
+            if (esp32_pass_fail == 1)
+            {
+                HAL_UART_Transmit(&huart2, "STM32: OK", 9, 100);
+            }
+        }
+    }
+    return;
+}
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+    adxl.AutoSleep = AUTOSLEEPON;
+    adxl.Range = RANGE_16G;
+    adxl.Rate = BWRATE_6_25;
+
+  /* USER CODE END 1 */
+
+  /* MPU Configuration--------------------------------------------------------*/
+  MPU_Config();
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_RTC_Init();
+  MX_SPI1_Init();
+  MX_SPI2_Init();
+  MX_I2C1_Init();
+  MX_I2C4_Init();
+  MX_USART2_UART_Init();
+  /* USER CODE BEGIN 2 */
+    ST7789_Init();
+    ST7789_Fill_Color(BLACK);
+
+    ADXL_Standby(ON);
+    ADXL_Init(&adxl);
+    ADXL_Standby(OFF);
+    ADXL_Measure(ON);
+
+    SHT31_Config(SHT31_ADDRESS_A, &hi2c1);
+
+    //  Max30102_Init(&hi2c4);
+
+    glb_menu = 0;
+    glb_menu_icon_flag = 0;
+    glb_rtc_icon_flag = 0;
+    glb_state = DATETIME;
+
+    sht_prev_humidity = 0;
+    sht_prev_temp = 0;
+
+    hbspo2_enable = 0;
+    hbspo2_flag = 0;
+
+    ST7789_WriteString(25, 100, "Initializing", Font_16x28, WHITE, BLACK);
+    HAL_Delay(15000);
+    handshaking(INIT, 0);
+    HAL_Delay(1000);
+    FontMorgan_32x72.width = 32;
+    FontMorgan_32x72.height = 72;
+    FontMorgan_32x72.data = Font_Morgan_32x72;
+    ST7789_Fill_Color(BLACK);
+
+    Max30102_Init(&hi2c4);
+  /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+    /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+    /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+    /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of ADXL_Task */
+  ADXL_TaskHandle = osThreadNew(Start_ADXL_Task, NULL, &ADXL_Task_attributes);
+
+  /* creation of FSM_Task */
+  FSM_TaskHandle = osThreadNew(Start_FSM_Task, NULL, &FSM_Task_attributes);
+
+  /* creation of SHT_Task */
+  SHT_TaskHandle = osThreadNew(Start_SHT_Task, NULL, &SHT_Task_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+    /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+    /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+    while (1)
+    {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+    }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Supply configuration update enable
+  */
+  HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+
+  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 5;
+  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLP = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 10;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+  RCC_OscInitStruct.PLL.PLLFRACN = 0;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+                              |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x307075B1;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief I2C4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C4_Init(void)
+{
+
+  /* USER CODE BEGIN I2C4_Init 0 */
+
+  /* USER CODE END I2C4_Init 0 */
+
+  /* USER CODE BEGIN I2C4_Init 1 */
+
+  /* USER CODE END I2C4_Init 1 */
+  hi2c4.Instance = I2C4;
+  hi2c4.Init.Timing = 0x00B03FDB;
+  hi2c4.Init.OwnAddress1 = 0;
+  hi2c4.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c4.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c4.Init.OwnAddress2 = 0;
+  hi2c4.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c4.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c4.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c4, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c4, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C4_Init 2 */
+
+  /* USER CODE END I2C4_Init 2 */
+
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 124;
+  hrtc.Init.SynchPrediv = 3999;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date
+  */
+  sTime.Hours = 9;
+  sTime.Minutes = 0;
+  sTime.Seconds = 0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_WEDNESDAY;
+  sDate.Month = RTC_MONTH_DECEMBER;
+  sDate.Date = 11;
+  sDate.Year = 24;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 0x0;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
+  hspi1.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
+  hspi1.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  hspi1.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  hspi1.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+  hspi1.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+  hspi1.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
+  hspi1.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
+  hspi1.Init.IOSwap = SPI_IO_SWAP_DISABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES_TXONLY;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 0x0;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi2.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
+  hspi2.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
+  hspi2.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  hspi2.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  hspi2.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+  hspi2.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+  hspi2.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
+  hspi2.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
+  hspi2.Init.IOSwap = SPI_IO_SWAP_DISABLE;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 230400;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart2, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart2, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, LEDR_Pin|LEDG_Pin|LEDB_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LEDR_Pin LEDG_Pin LEDB_Pin */
+  GPIO_InitStruct.Pin = LEDR_Pin|LEDG_Pin|LEDB_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PD4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+// 	if ((GPIO_Pin == GPIO_PIN_4)) {
+// 		Max30102_InterruptCallback();
+// 	}
+// }
+/* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+    /* Infinite loop */
+    for (;;)
+    {
+        if (hbspo2_enable == 1)
+        {
+            Max30102_Task();
+            hbspo2_heartRate = Max30102_GetHeartRate();
+            hbspo2_spo2 = Max30102_GetSpO2Value();
+        }
+    }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_Start_ADXL_Task */
+/**
+ * @brief Function implementing the ADXL_Task thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_Start_ADXL_Task */
+void Start_ADXL_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_ADXL_Task */
+    /* Infinite loop */
+    for (;;)
+    {
+        adxl_prevX = adxl_X;
+        adxl_prevY = adxl_Y;
+        adxl_prevZ = adxl_Z;
+        ADXL_getAccel(adxl_acc, OUTPUT_SIGNED);
+        adxl_X = adxl_acc[0];
+        adxl_Y = adxl_acc[1];
+        adxl_Z = adxl_acc[2];
+        osDelay(200);
+    }
+  /* USER CODE END Start_ADXL_Task */
+}
+
+/* USER CODE BEGIN Header_Start_FSM_Task */
+/**
+ * @brief Function implementing the FSM_Task thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_Start_FSM_Task */
+void Start_FSM_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_FSM_Task */
+    /* Infinite loop */
+    for (;;)
+    {
+        switch (glb_state)
+        {
+        case MENU:
+        {
+            ST7789_Fill_Color(BLACK);
+            glb_menu = 0;
+            glb_menu_icon_flag = 0;
+            glb_start_menu_time = HAL_GetTick();
+
+            while ((HAL_GetTick() - glb_start_menu_time) < MENU_TIMEOUT)
+            {
+                if ((adxl_Y >= 12) && (glb_menu != 0))
+                {
+                    glb_menu--;
+                    glb_menu_icon_flag = 0;
+                }
+
+                if ((adxl_Y <= -12) && (glb_menu != 4))
+                {
+                    glb_menu++;
+                    glb_menu_icon_flag = 0;
+                }
+
+                switch (glb_menu)
+                {
+                case 0:
+                {
+                    if (glb_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_DrawImageComp(56, 20, 128, 128, lcd_schedule, 4638, BLACK, 1);
+                        ST7789_WriteString(30, 165, "Date & Time", Font_16x28, WHITE, BLACK);
+                        glb_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    if (glb_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_DrawImageComp(56, 20, 128, 128, lcd_hbspo2, 2822, BLACK, 1);
+                        ST7789_WriteString(20, 165, "H.Rate & spO2", Font_16x28, WHITE, BLACK);
+                        glb_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    if (glb_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_DrawImageComp(56, 20, 128, 128, lcd_weather, 5928, BLACK, 1);
+                        ST7789_WriteString(65, 165, "Weather", Font_16x28, WHITE, BLACK);
+                        ST7789_WriteString(64, 200, "Tracker", Font_16x28, WHITE, BLACK);
+                        glb_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    if (glb_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_DrawImageComp(56, 20, 128, 128, lcd_game, lcd_game_size, BLACK, 1);
+                        ST7789_WriteString(80, 165, "Games", Font_16x28, WHITE, BLACK);
+                        glb_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 4:
+                {
+                    if (glb_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_DrawImageComp(56, 20, 128, 128, lcd_settings, lcd_settings_size, BLACK, 1);
+                        ST7789_WriteString(65, 165, "Setting", Font_16x28, WHITE, BLACK);
+                        glb_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+                }
+
+                osDelay(455);
+
+                if (((adxl_X - adxl_prevX) >= 4) && (adxl_X >= -20) && (adxl_prevX >= -20))
+                {
+                    osDelay(190);
+                    break;
+                }
+            }
+
+            switch (glb_menu)
+            {
+            case 0:
+            {
+                glb_rtc_icon_flag = 0;
+                glb_state = DATETIME;
+                osDelay(50);
+                break;
+            }
+            case 1:
+            {
+                glb_state = HBSPO2;
+                hbspo2_flag = 0;
+                break;
+            }
+            case 2:
+            {
+                glb_state = WEATHER;
+                break;
+            }
+            case 3:
+            {
+                glb_state = GAME;
+                break;
+            }
+            case 4:
+            {
+                glb_state = SETTING;
+                break;
+            }
+            }
+            ST7789_Fill_Color(BLACK);
+            break;
+        }
+        case DATETIME:
+        {
+            RTC_getTime(&hrtc, rtc_gHour, rtc_gMin, rtc_gSec, rtc_gDate, rtc_gWeekDay);
+            RTC_displayTime(glb_rtc_icon_flag);
+            glb_rtc_icon_flag = 1;
+
+            if (((adxl_X - adxl_prevX) >= 4) && (adxl_X >= -20) && (adxl_prevX >= -20))
+            {
+                glb_state = MENU;
+            }
+            break;
+        }
+        case WEATHER:
+        {
+            weather_menu = 0;
+            weather_menu_icon_flag = 0;
+
+            while (1)
+            {
+                if ((adxl_Y >= 12) && (weather_menu != 0))
+                {
+                    weather_menu--;
+                    weather_menu_icon_flag = 0;
+                }
+
+                if ((adxl_Y <= -12) && (weather_menu != 11))
+                {
+                    weather_menu++;
+                    weather_menu_icon_flag = 0;
+                }
+
+                switch (weather_menu)
+                {
+                case 0:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(20, 120, "Ha Giang Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(24, 120, "Yen Bai Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(20, 120, "Hanoi Capital", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(50, 120, "Hai Phong", Font_16x28, WHITE, BLACK);
+                        ST7789_WriteString(90, 160, "City", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 4:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(24, 120, "Nghe An Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 5:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(56, 120, "Hue Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 6:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(40, 120, "Quang Ngai", Font_16x28, WHITE, BLACK);
+                        ST7789_WriteString(85, 160, "Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 7:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(10, 120, "Khanh Hoa City", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 8:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(30, 120, "Da Lat City", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 9:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(35, 120, "Ho Chi Minh", Font_16x28, WHITE, BLACK);
+                        ST7789_WriteString(85, 160, "City", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 10:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(24, 120, "Long An Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                case 11:
+                {
+                    if (weather_menu_icon_flag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        ST7789_WriteString(36, 120, "Ca Mau Town", Font_16x28, WHITE, BLACK);
+                        weather_menu_icon_flag = 1;
+                    }
+                    break;
+                }
+                default:
+                    break;
+                }
+
+                if (((adxl_X - adxl_prevX) >= 4) && (adxl_X >= -20) && (adxl_prevX >= -20))
+                {
+                    ST7789_Fill_Color(BLACK);
+                    ST7789_WriteString(25, 100, "Getting data", Font_16x28, WHITE, BLACK);
+                    handshaking(WEATHER_API, weather_menu);
+                    osDelay(100);
+
+                    weather_rtc_icon_flag = 0;
+                    weather_day_icon_flag = 1;
+                    weather_day = -1;
+
+                    while (1)
+                    {
+                        WEATHER_display();
+
+                        if (((adxl_X - adxl_prevX) >= 4) && (adxl_X >= -20) && (adxl_prevX >= -20))
+                        {
+                            ST7789_Fill_Color(BLACK);
+                            weather_menu = 0;
+                            weather_menu_icon_flag = 0;
+                            break;
+                        }
+
+                        osDelay(380);
+                    }
+                }
+
+                if (((adxl_X - adxl_prevX) >= 4) && (adxl_X <= -20) && (adxl_prevX <= -20))
+                {
+                    weather_skip = 1;
+                    glb_state = MENU;
+                    break;
+                }
+
+                osDelay(380);
+            }
+            break;
+        }
+        case HBSPO2:
+        {
+            if (hbspo2_flag == 0)
+            {
+                hbspo2_flag = 1;
+                ST7789_DrawRectangle(0, 0, 239, 180, WHITE);
+            }
+            hbspo2_enable = 1;
+
+            osDelay(100);
+
+            memset(hbspo2_heartRate_buff, '\0', sizeof(hbspo2_heartRate_buff));
+            memset(hbspo2_spo2_buff, '\0', sizeof(hbspo2_spo2_buff));
+            sprintf(hbspo2_heartRate_buff, "Heart Rate: %03d bpm", hbspo2_heartRate);
+            sprintf(hbspo2_spo2_buff, "SpO2: %04d%%", hbspo2_spo2);
+            ST7789_WriteString(20, 65, hbspo2_spo2_buff, Font_11x18, WHITE, BLACK);
+            ST7789_WriteString(20, 115, hbspo2_heartRate_buff, Font_11x18, WHITE, BLACK);
+
+            if (((adxl_X - adxl_prevX) >= 4) && (adxl_X >= -20) && (adxl_prevX >= -20))
+            {
+                glb_state = MENU;
+                hbspo2_enable = 0;
+            }
+
+            break;
+        }
+        case GAME:
+        {
+            GAME_snake_loop();
+            break;
+        }
+        case SETTING:
+        {
+            rtc_sMode = 0;
+            rtc_sFlag = 0;
+            rtc_sDone = 0;
+
+            HAL_RTC_GetTime(&hrtc, &sTime_pre, RTC_FORMAT_BIN);
+            HAL_RTC_GetDate(&hrtc, &sDate_pre, RTC_FORMAT_BIN);
+
+            rtc_sHour = sTime_pre.Hours;
+            rtc_sMin = sTime_pre.Minutes;
+            rtc_sSec = 0;
+            rtc_sYear = sDate_pre.Year;
+            rtc_sMonth = sDate_pre.Month;
+            rtc_sDate = sDate_pre.Date;
+            rtc_sWeekDay = sDate_pre.WeekDay;
+
+            while (1)
+            {
+                if ((adxl_Y >= 12) && (rtc_sMode != 0))
+                {
+                    rtc_sMode--;
+                    rtc_sFlag = 0;
+                    memset(rtc_sHour_buff, '\0', sizeof(rtc_sHour_buff));
+                    memset(rtc_sMin_buff, '\0', sizeof(rtc_sMin_buff));
+                    memset(rtc_sDate_buff, '\0', sizeof(rtc_sDate_buff));
+                    memset(rtc_sMonth_buff, '\0', sizeof(rtc_sMonth_buff));
+                    memset(rtc_sYear_buff, '\0', sizeof(rtc_sYear_buff));
+                    memset(rtc_sWeekDay_buff, '\0', sizeof(rtc_sWeekDay_buff));
+                }
+
+                if ((adxl_Y <= -12) && (rtc_sMode != 6))
+                {
+                    rtc_sMode++;
+                    rtc_sFlag = 0;
+                    memset(rtc_sHour_buff, '\0', sizeof(rtc_sHour_buff));
+                    memset(rtc_sMin_buff, '\0', sizeof(rtc_sMin_buff));
+                    memset(rtc_sDate_buff, '\0', sizeof(rtc_sDate_buff));
+                    memset(rtc_sMonth_buff, '\0', sizeof(rtc_sMonth_buff));
+                    memset(rtc_sYear_buff, '\0', sizeof(rtc_sYear_buff));
+                    memset(rtc_sWeekDay_buff, '\0', sizeof(rtc_sWeekDay_buff));
+                }
+
+                switch (rtc_sMode)
+                {
+                case 0:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sHour != 0)
+                    {
+                        rtc_sHour--;
+                    }
+
+                    if (adxl_X <= -24 && rtc_sHour != 23)
+                    {
+                        rtc_sHour++;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sHour == 0)
+                    {
+                        rtc_sHour = 23;
+                        osDelay(200);
+                    }
+
+                    if (adxl_X <= -24 && rtc_sHour == 23)
+                    {
+                        rtc_sHour = 0;
+                        osDelay(200);
+                    }
+
+                    sprintf(rtc_sHour_buff, "%02d", rtc_sHour);
+                    ST7789_WriteString(76, 75, "Set Hour", Font_11x18, WHITE, BLACK);
+                    ST7789_WriteStringMedium(84, 96, rtc_sHour_buff, FontMorgan_32x72, WHITE, BLACK);
+                    break;
+                }
+                case 1:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sMin != 0)
+                    {
+                        rtc_sMin--;
+                    }
+
+                    if (adxl_X <= -24 && rtc_sMin != 59)
+                    {
+                        rtc_sMin++;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sMin == 0)
+                    {
+                        rtc_sMin = 59;
+                        osDelay(200);
+                    }
+
+                    if (adxl_X <= -24 && rtc_sMin == 59)
+                    {
+                        rtc_sMin = 0;
+                        osDelay(200);
+                    }
+
+                    sprintf(rtc_sMin_buff, "%02d", rtc_sMin);
+                    ST7789_WriteString(63, 75, "Set Minute", Font_11x18, WHITE, BLACK);
+                    ST7789_WriteStringMedium(84, 96, rtc_sMin_buff, FontMorgan_32x72, WHITE, BLACK);
+                    break;
+                }
+                case 2:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sWeekDay != 1)
+                    {
+                        rtc_sWeekDay--;
+                    }
+
+                    if (adxl_X <= -24 && rtc_sWeekDay != 7)
+                    {
+                        rtc_sWeekDay++;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sWeekDay == 1)
+                    {
+                        rtc_sWeekDay = 7;
+                        osDelay(200);
+                    }
+
+                    if (adxl_X <= -24 && rtc_sWeekDay == 7)
+                    {
+                        rtc_sWeekDay = 1;
+                        osDelay(200);
+                    }
+
+                    sprintf(rtc_sWeekDay_buff, "%s", (rtc_sWeekDay == 1) ? "Mon" : (rtc_sWeekDay == 2) ? "Tue"
+                                                                               : (rtc_sWeekDay == 3)   ? "Wed"
+                                                                               : (rtc_sWeekDay == 4)   ? "Thu"
+                                                                               : (rtc_sWeekDay == 5)   ? "Fri"
+                                                                               : (rtc_sWeekDay == 6)   ? "Sat"
+                                                                                                       : "Sun");
+                    ST7789_WriteString(64, 75, "Set Weekday", Font_11x18, WHITE, BLACK);
+                    ST7789_WriteStringMedium(75, 96, rtc_sWeekDay_buff, FontMorgan_32x72, WHITE, BLACK);
+                    break;
+                }
+                case 3:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sDate != 1)
+                    {
+                        rtc_sDate--;
+                    }
+
+                    if (adxl_X <= -24 && rtc_sDate != 31)
+                    {
+                        rtc_sDate++;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sDate == 1)
+                    {
+                        rtc_sDate = 31;
+                        osDelay(200);
+                    }
+
+                    if (adxl_X <= -24 && rtc_sDate == 31)
+                    {
+                        rtc_sDate = 1;
+                        osDelay(200);
+                    }
+
+                    sprintf(rtc_sDate_buff, "%02d", rtc_sDate);
+                    ST7789_WriteString(76, 75, "Set Day", Font_11x18, WHITE, BLACK);
+                    ST7789_WriteStringMedium(84, 96, rtc_sDate_buff, FontMorgan_32x72, WHITE, BLACK);
+                    break;
+                }
+                case 4:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sMonth != 1)
+                    {
+                        rtc_sMonth--;
+                    }
+
+                    if (adxl_X <= -24 && rtc_sMonth != 12)
+                    {
+                        rtc_sMonth++;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sMonth == 1)
+                    {
+                        rtc_sMonth = 12;
+                        osDelay(200);
+                    }
+
+                    if (adxl_X <= -24 && rtc_sMonth == 12)
+                    {
+                        rtc_sMonth = 1;
+                        osDelay(200);
+                    }
+
+                    sprintf(rtc_sMonth_buff, "%02d", rtc_sMonth);
+                    ST7789_WriteString(68, 75, "Set Month", Font_11x18, WHITE, BLACK);
+                    ST7789_WriteStringMedium(84, 96, rtc_sMonth_buff, FontMorgan_32x72, WHITE, BLACK);
+                    break;
+                }
+                case 5:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sYear != 0)
+                    {
+                        rtc_sYear--;
+                    }
+
+                    if (adxl_X <= -24 && rtc_sYear != 99)
+                    {
+                        rtc_sYear++;
+                    }
+
+                    if (adxl_X >= -10 && rtc_sYear == 0)
+                    {
+                        rtc_sYear = 99;
+                        osDelay(200);
+                    }
+
+                    if (adxl_X <= -24 && rtc_sYear == 99)
+                    {
+                        rtc_sYear = 0;
+                        osDelay(200);
+                    }
+
+                    sprintf(rtc_sYear_buff, "20%02d", rtc_sYear);
+                    ST7789_WriteString(76, 75, "Set Year", Font_11x18, WHITE, BLACK);
+                    ST7789_WriteStringMedium(59, 96, rtc_sYear_buff, FontMorgan_32x72, WHITE, BLACK);
+                    break;
+                }
+                case 6:
+                {
+                    if (rtc_sFlag == 0)
+                    {
+                        ST7789_Fill_Color(BLACK);
+                        rtc_sFlag = 1;
+                    }
+
+                    ST7789_WriteStringMedium(43, 96, "DONE?", FontMorgan_32x72, WHITE, BLACK);
+
+                    if (((adxl_X - adxl_prevX) >= 4) && (adxl_X >= -20) && (adxl_prevX >= -20))
+                    {
+                        rtc_sDone = 1;
+                        RTC_setTime(&hrtc, rtc_sHour, rtc_sMin, rtc_sSec, rtc_sYear, rtc_sMonth, rtc_sDate, rtc_sWeekDay);
+                        break;
+                    }
+                    break;
+                }
+                default:
+                    break;
+                }
+
+                if (rtc_sDone == 1)
+                {
+                    glb_state = MENU;
+                    break;
+                }
+
+                osDelay(370);
+            }
+            break;
+        }
+        }
+        //    osDelay(5);
+    }
+  /* USER CODE END Start_FSM_Task */
+}
+
+/* USER CODE BEGIN Header_Start_SHT_Task */
+/**
+ * @brief Function implementing the SHT_Task thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_Start_SHT_Task */
+void Start_SHT_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_SHT_Task */
+    /* Infinite loop */
+    for (;;)
+    {
+        if (SHT31_GetData(SHT31_SingleShot, SHT31_Low, SHT31_NON_Stretch, SHT31_1) == SHT31_OK)
+        {
+            sht_temp = (int8_t)SHT31_GetTemperature();
+            sht_humidity = (int8_t)SHT31_GetHumidity();
+
+            sprintf((char *)sht_temp_buff, "%d%cC", sht_temp, 0x7F);
+            sprintf((char *)sht_hum_buff, "%d%c", sht_humidity, 0x25);
+        }
+        osDelay(190);
+        sht_prev_temp = sht_temp;
+        sht_prev_humidity = sht_humidity;
+        osDelay(2000);
+    }
+  /* USER CODE END Start_SHT_Task */
+}
+
+ /* MPU Configuration */
+
+void MPU_Config(void)
+{
+  MPU_Region_InitTypeDef MPU_InitStruct = {0};
+
+  /* Disables the MPU */
+  HAL_MPU_Disable();
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
+  MPU_InitStruct.BaseAddress = 0x0;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
+  MPU_InitStruct.SubRegionDisable = 0x87;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  /* Enables the MPU */
+  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM5 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM5) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+    /* User can add his own implementation to report the HAL error return state */
+    __disable_irq();
+    while (1)
+    {
+    }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+    /* User can add his own implementation to report the file name and line number,
+       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */

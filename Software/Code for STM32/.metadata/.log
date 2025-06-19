@@ -1,0 +1,503 @@
+!SESSION 2025-01-07 21:58:53.090 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2025-01-07 21:58:59.077
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2025-01-07 21:58:59.086
+!MESSAGE Log4j2 initialized with config file D:\LinKK-isme\Đại học\Thiết kế hệ thống nhúng\WeatherTracker_NVL_NHK_DVK\Code for STM32\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2025-01-07 21:59:03.644
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.equinox.p2.core 4 0 2025-01-07 22:00:09.246
+!MESSAGE Provisioning exception
+!STACK 1
+org.eclipse.equinox.p2.core.ProvisionException: Unable to connect to repository https://sw-center.st.com/stm32cubeide/eclipse/compositeContent.xml
+	at org.eclipse.equinox.internal.p2.repository.CacheManager.createCache(CacheManager.java:250)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepositoryFactory.getLocalFile(CompositeMetadataRepositoryFactory.java:77)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepositoryFactory.load(CompositeMetadataRepositoryFactory.java:100)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.factoryLoad(MetadataRepositoryManager.java:63)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:791)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:689)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:110)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:105)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository.addChild(CompositeMetadataRepository.java:161)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository.<init>(CompositeMetadataRepository.java:93)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepositoryFactory.load(CompositeMetadataRepositoryFactory.java:124)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.factoryLoad(MetadataRepositoryManager.java:63)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:791)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:689)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:110)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:105)
+	at org.eclipse.equinox.internal.p2.updatechecker.UpdateChecker.getAvailableRepositories(UpdateChecker.java:152)
+	at org.eclipse.equinox.internal.p2.updatechecker.UpdateChecker.checkForUpdates(UpdateChecker.java:130)
+	at org.eclipse.equinox.internal.p2.updatechecker.UpdateChecker$UpdateCheckThread.run(UpdateChecker.java:78)
+Caused by: java.net.ConnectException: Network is unreachable: getsockopt
+	at java.net.http/jdk.internal.net.http.common.Utils.toConnectException(Utils.java:1055)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:151)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.handleEvent(HttpClientImpl.java:979)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.lambda$run$3(HttpClientImpl.java:934)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:934)
+Caused by: java.net.SocketException: Network is unreachable: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:138)
+	... 4 more
+!SUBENTRY 1 org.eclipse.equinox.p2.transport.ecf 4 1002 2025-01-07 22:00:09.254
+!MESSAGE Unable to connect to repository https://sw-center.st.com/stm32cubeide/eclipse/compositeContent.xml
+!STACK 0
+java.net.ConnectException: Network is unreachable: getsockopt
+	at java.net.http/jdk.internal.net.http.common.Utils.toConnectException(Utils.java:1055)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:151)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.handleEvent(HttpClientImpl.java:979)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.lambda$run$3(HttpClientImpl.java:934)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:934)
+Caused by: java.net.SocketException: Network is unreachable: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:138)
+	... 4 more
+
+!ENTRY org.eclipse.equinox.p2.metadata.repository 4 1002 2025-01-07 22:00:09.266
+!MESSAGE Unable to read repository at https://sw-center.st.com/stm32cubeide/updatesite1.
+!STACK 1
+org.eclipse.equinox.p2.core.ProvisionException: Unable to connect to repository https://sw-center.st.com/stm32cubeide/eclipse/compositeContent.xml
+	at org.eclipse.equinox.internal.p2.repository.CacheManager.createCache(CacheManager.java:250)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepositoryFactory.getLocalFile(CompositeMetadataRepositoryFactory.java:77)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepositoryFactory.load(CompositeMetadataRepositoryFactory.java:100)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.factoryLoad(MetadataRepositoryManager.java:63)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:791)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:689)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:110)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:105)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository.addChild(CompositeMetadataRepository.java:161)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository.<init>(CompositeMetadataRepository.java:93)
+	at org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepositoryFactory.load(CompositeMetadataRepositoryFactory.java:124)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.factoryLoad(MetadataRepositoryManager.java:63)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:791)
+	at org.eclipse.equinox.internal.p2.repository.helpers.AbstractRepositoryManager.loadRepository(AbstractRepositoryManager.java:689)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:110)
+	at org.eclipse.equinox.internal.p2.metadata.repository.MetadataRepositoryManager.loadRepository(MetadataRepositoryManager.java:105)
+	at org.eclipse.equinox.internal.p2.updatechecker.UpdateChecker.getAvailableRepositories(UpdateChecker.java:152)
+	at org.eclipse.equinox.internal.p2.updatechecker.UpdateChecker.checkForUpdates(UpdateChecker.java:130)
+	at org.eclipse.equinox.internal.p2.updatechecker.UpdateChecker$UpdateCheckThread.run(UpdateChecker.java:78)
+Caused by: java.net.ConnectException: Network is unreachable: getsockopt
+	at java.net.http/jdk.internal.net.http.common.Utils.toConnectException(Utils.java:1055)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:151)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.handleEvent(HttpClientImpl.java:979)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.lambda$run$3(HttpClientImpl.java:934)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:934)
+Caused by: java.net.SocketException: Network is unreachable: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:138)
+	... 4 more
+!SUBENTRY 1 org.eclipse.equinox.p2.transport.ecf 4 1002 2025-01-07 22:00:09.267
+!MESSAGE Unable to connect to repository https://sw-center.st.com/stm32cubeide/eclipse/compositeContent.xml
+!STACK 0
+java.net.ConnectException: Network is unreachable: getsockopt
+	at java.net.http/jdk.internal.net.http.common.Utils.toConnectException(Utils.java:1055)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:151)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.handleEvent(HttpClientImpl.java:979)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.lambda$run$3(HttpClientImpl.java:934)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:934)
+Caused by: java.net.SocketException: Network is unreachable: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection$ConnectEvent.handle(PlainHttpConnection.java:138)
+	... 4 more
+
+!ENTRY org.eclipse.equinox.p2.transport.ecf 4 1002 2025-01-07 22:00:09.310
+!MESSAGE Unable to connect to repository https://download.eclipse.org/releases/2023-12/content.xml
+!STACK 0
+java.net.ConnectException
+	at java.net.http/jdk.internal.net.http.common.Utils.toConnectException(Utils.java:1055)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection.connectAsync(PlainHttpConnection.java:198)
+	at java.net.http/jdk.internal.net.http.AsyncSSLConnection.connectAsync(AsyncSSLConnection.java:56)
+	at java.net.http/jdk.internal.net.http.Http2Connection.createAsync(Http2Connection.java:378)
+	at java.net.http/jdk.internal.net.http.Http2ClientImpl.getConnectionFor(Http2ClientImpl.java:126)
+	at java.net.http/jdk.internal.net.http.ExchangeImpl.get(ExchangeImpl.java:93)
+	at java.net.http/jdk.internal.net.http.Exchange.establishExchange(Exchange.java:343)
+	at java.net.http/jdk.internal.net.http.Exchange.responseAsyncImpl0(Exchange.java:475)
+	at java.net.http/jdk.internal.net.http.Exchange.responseAsyncImpl(Exchange.java:380)
+	at java.net.http/jdk.internal.net.http.Exchange.responseAsync(Exchange.java:372)
+	at java.net.http/jdk.internal.net.http.MultiExchange.responseAsyncImpl(MultiExchange.java:408)
+	at java.net.http/jdk.internal.net.http.MultiExchange.lambda$responseAsyncImpl$7(MultiExchange.java:449)
+	at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934)
+	at java.base/java.util.concurrent.CompletableFuture.uniHandleStage(CompletableFuture.java:950)
+	at java.base/java.util.concurrent.CompletableFuture.handle(CompletableFuture.java:2340)
+	at java.net.http/jdk.internal.net.http.MultiExchange.responseAsyncImpl(MultiExchange.java:439)
+	at java.net.http/jdk.internal.net.http.MultiExchange.lambda$responseAsync0$2(MultiExchange.java:341)
+	at java.base/java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1773)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.nio.channels.UnresolvedAddressException
+	at java.base/sun.nio.ch.Net.checkAddress(Net.java:149)
+	at java.base/sun.nio.ch.Net.checkAddress(Net.java:157)
+	at java.base/sun.nio.ch.SocketChannelImpl.checkRemote(SocketChannelImpl.java:816)
+	at java.base/sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:839)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection.lambda$connectAsync$0(PlainHttpConnection.java:183)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:569)
+	at java.net.http/jdk.internal.net.http.PlainHttpConnection.connectAsync(PlainHttpConnection.java:185)
+	... 21 more
+
+!ENTRY org.eclipse.cdt.core 1 0 2025-01-07 22:04:25.482
+!MESSAGE Indexed 'rfdgbvgfdrferdg' (47 sources, 238 headers) in 12.1 sec: 30,278 declarations; 156,761 references; 3 unresolved inclusions; 295 syntax errors; 1,069 unresolved names (0.57%)
+
+!ENTRY com.st.stm32cube.ide.mcu.debug.launch 2 0 2025-01-07 22:14:56.337
+!MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY com.st.stm32cube.ide.mcu.debug.launch 2 0 2025-01-07 22:15:52.565
+!MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY com.st.stm32cube.ide.mcu.debug.launch 2 0 2025-01-07 22:16:54.358
+!MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY com.st.stm32cube.ide.mcu.debug.launch 2 0 2025-01-07 22:21:35.781
+!MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:22:27.583
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:22:27.583
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:22:42.622
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:22:42.622
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:23:20.559
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:334)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:23:20.559
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:26:32.031
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:26:32.031
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:28:58.479
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:28:58.479
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:31:50.179
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:31:50.179
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:32:27.063
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:32:27.064
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:33:27.074
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:33:27.075
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+
+!ENTRY org.eclipse.cdt.dsf.gdb 4 5012 2025-01-07 22:33:40.959
+!MESSAGE Error in final launch sequence:
+
+Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 1
+org.eclipse.core.runtime.CoreException: Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.concurrent.Query.get(Query.java:112)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugSession(GdbLaunchDelegate.java:252)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launchDebugger(GdbLaunchDelegate.java:109)
+	at org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate.launch(GdbLaunchDelegate.java:97)
+	at com.st.stm32cube.ide.mcu.debug.launch.DSFDelegate.launch(DSFDelegate.java:336)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:805)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:716)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1040)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$1.run(DebugUIPlugin.java:1243)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+Caused by: java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SUBENTRY 1 org.eclipse.cdt.dsf.gdb 4 10004 2025-01-07 22:33:40.959
+!MESSAGE Failed to execute MI command:
+-environment-cd "D:/LinKK-isme/Đại học/Thiết kế hệ thống nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg"
+Error message from debugger back end:
+D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+!STACK 0
+java.lang.Exception: D:/LinKK-isme/??i h?c/Thi?t k? h? th?ng nhúng/WeatherTracker_NVL_NHK_DVK/Code for STM32/rfdgbvgfdrferdg: Invalid argument.
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.processMIOutput(AbstractMIControl.java:1024)
+	at org.eclipse.cdt.dsf.mi.service.command.AbstractMIControl$RxThread.run(AbstractMIControl.java:853)
+!SESSION 2025-01-13 00:46:33.969 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2025-01-13 00:46:57.370
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2025-01-13 00:46:57.379
+!MESSAGE Log4j2 initialized with config file D:\LinKK-isme\Đại học\Thiết kế hệ thống nhúng\WeatherTracker_NVL_NHK_DVK\Code for STM32\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2025-01-13 00:47:06.927
+!MESSAGE Started RMI Server, listening on port 41338

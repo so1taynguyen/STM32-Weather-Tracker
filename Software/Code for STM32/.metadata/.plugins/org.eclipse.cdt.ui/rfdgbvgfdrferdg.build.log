@@ -1,0 +1,10 @@
+22:33:38 **** Incremental Build of configuration Debug for project rfdgbvgfdrferdg ****
+make -j12 all 
+arm-none-eabi-size  rfdgbvgfdrferdg.elf 
+   text	   data	    bss	    dec	    hex	filename
+ 118256	    620	 149064	 267940	  416a4	rfdgbvgfdrferdg.elf
+Finished building: default.size.stdout
+ 
+
+22:33:38 Build Finished. 0 errors, 0 warnings. (took 418ms)
+
