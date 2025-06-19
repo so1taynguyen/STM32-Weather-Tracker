@@ -5,7 +5,7 @@ const char *password = "Bocutenhat";
 
 const char* format = "%d/%m/%Y";
 
-String apiKey = "209e3b62d541a1a3b5c635fa0785658f";
+String apiKey = ""; // Enter your API here
 
 const int num_of_city = 12;
 String cities_name[num_of_city] = { "Ha Giang Town", "Yen Bai Town", "Hanoi Capital", "Hai Phong City", "Nghe An Town", "Hue Town", "Quang Ngai Town", "Khanh Hoa City", "Da Lat City", "Ho Chi Minh City", "Long An Town", "Ca Mau Town" };
